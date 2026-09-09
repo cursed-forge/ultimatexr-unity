@@ -82,7 +82,7 @@ namespace UltimateXR.Avatar
         [SerializeField] private UxrAvatarRig           _rig              = new UxrAvatarRig();
         [SerializeField] private UxrAvatarRigInfo       _rigInfo          = new UxrAvatarRigInfo();
         [SerializeField] private bool                   _handPosesFoldout = true;
-        [SerializeField] private List<UxrHandPoseAsset> _handPoses;
+        [SerializeField] private List<UxrHandPoseAsset> _handPoses = new List<UxrHandPoseAsset>();
         [SerializeField] private UxrHandPoseAsset       _defaultHandPose;
 
         #endregion
@@ -518,7 +518,19 @@ namespace UltimateXR.Avatar
         /// <param name="poses">The hand pose assets to make available on this avatar.</param>
         public void SetHandPoses(IReadOnlyList<UxrHandPoseAsset> poses)
         {
-            _handPoses = new List<UxrHandPoseAsset>(poses);
+            if (_handPoses == null)
+            {
+                _handPoses = new List<UxrHandPoseAsset>();
+            }
+            else
+            {
+                _handPoses.Clear();
+            }
+
+            if (poses != null)
+            {
+                _handPoses.AddRange(poses);
+            }
         }
 
         #endregion
