@@ -1462,6 +1462,21 @@ namespace UltimateXR.Avatar
         }
 
         /// <summary>
+        ///     Forces <see cref="AvatarRigInfo" /> to recompute now, from the rig's current state, regardless of
+        ///     <see cref="UxrAvatarRigInfo.SerializedVersion" />. The Editor rig assistant normally recomputes rig info
+        ///     as soon as the Inspector rig changes, so a prefab or scene avatar always has current data by the time
+        ///     any other code reads it. A code-composed avatar has no such Inspector step: the very first read of
+        ///     <see cref="AvatarRigInfo" /> auto-computes once (see the property getter), but nothing guarantees that
+        ///     read happens after every rig element, including the finger chain, is in place, and once computed the
+        ///     version check means it never runs again. Call this once, explicitly, right after the rig is fully
+        ///     assigned and before anything reads finger or hand axes (hand poses, retargeting, IK).
+        /// </summary>
+        public void RecomputeRigInfo()
+        {
+            CreateRigInfo();
+        }
+
+        /// <summary>
         ///     Creates a dictionary to map pose names to <see cref="UxrRuntimeHandPose" />. If a given pose name is present more
         ///     than once, the overriden pose in the child prefab/instance is stored.
         /// </summary>
