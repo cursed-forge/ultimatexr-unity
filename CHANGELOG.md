@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Fix a Unity 6000.5 compile error in UxrManager.cs. Unity 6000.5.1f1 marks
+  GetInstanceID as obsolete with error status. UxrManager used it to
+  deduplicate precached instances in a dictionary keyed by int. The key
+  type now is GameObject, which already deduplicates by reference and
+  needs no instance id call. CursedForge maintains this change on the
+  cursedforge/unity-6000 branch.
+
 - Add support for Meta Quest 3S.
 
 - Soon v1.0.0 with full multiplayer support and tons of new features! Already available
