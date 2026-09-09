@@ -289,6 +289,17 @@ namespace UltimateXR.Avatar
         public UxrAvatarRigType AvatarRigType => _rigType;
 
         /// <summary>
+        ///     Sets the avatar rig type. Normally chosen once in the Inspector's rig assistant; a code-composed avatar
+        ///     has no Inspector step, and <see cref="UxrStandardAvatarController" /> only builds arm IK for
+        ///     <see cref="UxrAvatarRigType.HalfOrFullBody" />, so this is not cosmetic and a composer needs to set it.
+        /// </summary>
+        /// <param name="rigType">The rig type this avatar's geometry actually is.</param>
+        public void SetAvatarRigType(UxrAvatarRigType rigType)
+        {
+            _rigType = rigType;
+        }
+
+        /// <summary>
         ///     Gets the avatar's camera component.
         /// </summary>
         public Camera CameraComponent
