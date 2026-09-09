@@ -4,6 +4,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 using System.Collections.Generic;
+using UltimateXR.Core;
 
 namespace UltimateXR.Devices.Integrations.Meta
 {
