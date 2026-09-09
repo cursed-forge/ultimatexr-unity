@@ -557,21 +557,10 @@ namespace UltimateXR.Editor.Manipulation
                     Undo.RegisterCreatedObjectUndo(snapParent.gameObject, "New snap parent");
                 }
 
-                // Try to expand parent
-
-                var hierarchyWindowType = typeof(EditorWindow).Assembly.GetType("UnityEditor.SceneHierarchyWindow");
-
-                if (hierarchyWindowType != null)
-                {
-                    EditorApplication.ExecuteMenuItem("Window/General/Hierarchy");
-                    var methodInfo      = hierarchyWindowType.GetMethod("SetExpandedRecursive");
-                    var hierarchyWindow = EditorWindow.focusedWindow;
-
-                    if (methodInfo != null && hierarchyWindow != null)
-                    {
-                        methodInfo.Invoke(hierarchyWindow, new object[] { snapParent.gameObject.GetInstanceID(), true });
-                    }
-                }
+                // Hierarchy auto-expand removed: it needed the obsolete
+                // int instance id (CursedForge UXR-0 patch, Unity 6000.5).
+                // Cosmetic only; the created snap parent still exists and is
+                // selectable, it simply is not force-expanded in the window.
 
                 // Create snap transform
 

@@ -14,6 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   needs no instance id call. CursedForge maintains this change on the
   cursedforge/unity-6000 branch.
 
+- Fix a second Unity 6000.5 compile error, in the Editor assembly, in
+  UxrGrabbableObjectGrabPointInfoDrawer.cs. The Hand Pose/Grab Point
+  editor tool called the same obsolete GetInstanceID to expand the
+  Hierarchy window after it created a new snap parent. Removed the
+  auto-expand call. This is cosmetic only: the created snap parent
+  still exists and is selectable, it is simply not force-expanded in
+  the window. CursedForge maintains this change on the
+  cursedforge/unity-6000 branch.
+
 - Add support for Meta Quest 3S.
 
 - Soon v1.0.0 with full multiplayer support and tons of new features! Already available
