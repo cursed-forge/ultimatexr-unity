@@ -510,6 +510,17 @@ namespace UltimateXR.Avatar
             set => _defaultHandPose = value;
         }
 
+        /// <summary>
+        ///     Sets the list of hand pose assets available to this avatar. CursedForge composes avatars from code and
+        ///     has no scene or prefab to serialize this list into, so this method lets a runtime composer assign it
+        ///     directly instead of through the Inspector.
+        /// </summary>
+        /// <param name="poses">The hand pose assets to make available on this avatar.</param>
+        public void SetHandPoses(IReadOnlyList<UxrHandPoseAsset> poses)
+        {
+            _handPoses = new List<UxrHandPoseAsset>(poses);
+        }
+
         #endregion
 
         #region Implicit IUxrStateSync
