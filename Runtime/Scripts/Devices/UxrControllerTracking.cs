@@ -45,6 +45,24 @@ namespace UltimateXR.Devices
         /// <inheritdoc />
         public bool HasRightHandSensorSetup => _rightHandSensor != null;
 
+        /// <summary>
+        ///     Sets the left and right hand sensor transforms from code. A code-created
+        ///     avatar has no Inspector to assign <see cref="_leftHandSensor" /> and
+        ///     <see cref="_rightHandSensor" />, so <see cref="Awake" /> would otherwise
+        ///     always find both null and skip <see cref="SetupSensor" /> entirely, which
+        ///     leaves the wrist bone's rotation at the unset quaternion default instead of
+        ///     the live controller pose. Call this before the component's <see cref="Awake" />
+        ///     runs (for example, while the GameObject is still inactive), since
+        ///     <see cref="SetupSensor" /> only reads these fields once, at <see cref="Awake" />.
+        /// </summary>
+        /// <param name="leftHandSensor">Reference transform for the left hand sensor.</param>
+        /// <param name="rightHandSensor">Reference transform for the right hand sensor.</param>
+        public void SetHandSensors(Transform leftHandSensor, Transform rightHandSensor)
+        {
+            _leftHandSensor  = leftHandSensor;
+            _rightHandSensor = rightHandSensor;
+        }
+
         /// <inheritdoc />
         public Vector3 SensorLeftPos => Avatar.transform.TransformPoint(LocalAvatarLeftHandSensorPos);
 
