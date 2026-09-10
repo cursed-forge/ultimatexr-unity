@@ -115,6 +115,33 @@ namespace UltimateXR.Devices
         /// <inheritdoc />
         public Quaternion SensorRightHandRot => SensorRightRot * _localSensorRightHandRot;
 
+        /// <summary>
+        ///     Gets the left wrist bone's position stored by <see cref="SetupSensor" />, in the
+        ///     left hand sensor's own local coordinates. A code-composed avatar with no Inspector
+        ///     has no other way to check this delta stayed small (a sensor placed away from the
+        ///     wrist bakes the whole bind-pose offset into this value, CursedForge's own build
+        ///     0.0.78 defect). Read-only, for tests and diagnostics.
+        /// </summary>
+        public Vector3 LocalSensorLeftHandPos => _localSensorLeftHandPos;
+
+        /// <summary>
+        ///     Gets the right wrist bone's position stored by <see cref="SetupSensor" />, in the
+        ///     right hand sensor's own local coordinates. See <see cref="LocalSensorLeftHandPos" />.
+        /// </summary>
+        public Vector3 LocalSensorRightHandPos => _localSensorRightHandPos;
+
+        /// <summary>
+        ///     Gets the left wrist bone's rotation stored by <see cref="SetupSensor" />, relative
+        ///     to the left hand sensor's own rotation. See <see cref="LocalSensorLeftHandPos" />.
+        /// </summary>
+        public Quaternion LocalSensorLeftHandRot => _localSensorLeftHandRot;
+
+        /// <summary>
+        ///     Gets the right wrist bone's rotation stored by <see cref="SetupSensor" />, relative
+        ///     to the right hand sensor's own rotation. See <see cref="LocalSensorLeftHandPos" />.
+        /// </summary>
+        public Quaternion LocalSensorRightHandRot => _localSensorRightHandRot;
+
         #endregion
 
         #region Unity
