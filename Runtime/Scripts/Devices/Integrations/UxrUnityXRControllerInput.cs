@@ -424,12 +424,14 @@ namespace UltimateXR.Devices.Integrations
                     // Register active device
                     s_activeInputDevices.Add(inputDevice);
 
-                    if (!enabled)
-                    {
-                        // Component is disabled. Enable it and send Connected event.
-                        enabled = true;
-                        OnDeviceConnected(new UxrDeviceConnectEventArgs(true));
-                    }
+                    // CursedForge fix: always raise Connected, not only on the disabled->enabled
+                    // transition, because gating on "!enabled" swallows the SECOND controller's
+                    // event when left and right connect a moment apart (observed on the Meta XR
+                    // Simulator: left enables the component and fires the event, right then finds
+                    // the component already enabled and updates _deviceRight with no event at all,
+                    // so a listener counting connected hands never learns about the second one).
+                    enabled = true;
+                    OnDeviceConnected(new UxrDeviceConnectEventArgs(true));
                 }
             }
             else
