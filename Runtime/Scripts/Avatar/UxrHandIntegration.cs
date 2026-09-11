@@ -47,7 +47,17 @@ namespace UltimateXR.Avatar
         {
             // Get component and look for requirements:
 
-            UxrAvatar avatar = GetComponentInParent<UxrAvatar>();
+            // includeInactive: true. A composed avatar is built with its
+            // root INACTIVE until every part (rig, poses, grabbers, hand
+            // integrations) is in place, then activated once at the end
+            // (see UxrAvatarComposer.Compose in the CursedForge client for
+            // the reasoning). Calling this method during that composition
+            // window, before the root activates, used to always return
+            // false here: the parameterless GetComponentInParent overload
+            // does not search an inactive ancestor. A caller composing
+            // from code, rather than an Inspector-authored scene that is
+            // already active, needs this to succeed at that point too.
+            UxrAvatar avatar = GetComponentInParent<UxrAvatar>(includeInactive: true);
 
             if (avatar == null)
             {
