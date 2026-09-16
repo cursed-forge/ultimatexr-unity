@@ -270,7 +270,30 @@ namespace UltimateXR.Animation.IK
             // Compute the position and rotation of the rest
             Vector3 forearmForward = (ToLocalAvatarPos(Hand.position) - elbowPosition).normalized;
             float   elbowAngle     = Vector3.Angle(armForward, forearmForward);
-            Vector3 elbowAxis      = elbowAngle > ElbowMinAngleThreshold ? Vector3.Cross(forearmForward, armForward).normalized : Vector3.up;
+
+            // At a near-straight arm (elbowAngle close to zero) the cross product
+            // of armForward and forearmForward is close to undefined, and used to
+            // fall back to a fixed world axis (Vector3.up). That fallback is a
+            // different value from the cross-product axis on nearly every frame at
+            // this pose, so the elbow flipped between two solutions one frame
+            // apart with the wrist held still. Keep the last stable axis instead of
+            // ever jumping to a fixed axis, and blend smoothly into the cross
+            // product as the angle rises through a small band above the threshold,
+            // so no single frame can jump.
+            Vector3 elbowAxis;
+
+            if (elbowAngle <= ElbowMinAngleThreshold)
+            {
+                elbowAxis = _lastElbowAxis;
+            }
+            else
+            {
+                Vector3 crossElbowAxis = Vector3.Cross(forearmForward, armForward).normalized;
+                float   blend          = Mathf.Clamp01((elbowAngle - ElbowMinAngleThreshold) / ElbowAxisBlendBandDegrees);
+                elbowAxis = Vector3.Slerp(_lastElbowAxis, crossElbowAxis, blend).normalized;
+            }
+
+            _lastElbowAxis = elbowAxis;
 
             elbowAxis = _side == UxrHandSide.Left ? -elbowAxis : elbowAxis;
 
@@ -524,8 +547,10 @@ namespace UltimateXR.Animation.IK
         private const float WristTorsionDegreesFactor       = 150.0f;
         private const float ElbowApertureRotationSmoothTime = 0.1f;
         private const float ElbowMinAngleThreshold          = 3.0f;
+        private const float ElbowAxisBlendBandDegrees       = 2.0f;
 
         private UxrArmIKSolver        _otherArm;
+        private Vector3                _lastElbowAxis = Vector3.up;
         private UxrUniversalLocalAxes _clavicleUniversalLocalAxes;
         private UxrUniversalLocalAxes _armUniversalLocalAxes;
         private UxrUniversalLocalAxes _forearmUniversalLocalAxes;
