@@ -227,7 +227,39 @@ namespace UltimateXR.Animation.IK
             Vector3    otherLocalArmPos = ToLocalAvatarPos(_otherArm.Arm.position);
             Quaternion rotToShoulder    = Quaternion.LookRotation(Vector3.Cross((localArmPos - otherLocalArmPos) * (_side == UxrHandSide.Left ? -1.0f : 1.0f), Vector3.up).normalized, Vector3.up);
             Vector3    armToHand        = (finalLocalHandPosition - localArmPos).normalized;
-            Quaternion rotArmForward    = rotToShoulder * Quaternion.LookRotation(Quaternion.Inverse(rotToShoulder) * localArmToCenter, Quaternion.Inverse(rotToShoulder) * armToHand);
+
+            // localArmToCenter is a scalar multiple of the shoulder-to-hand
+            // vector for a relaxed, non-over-extended arm, the same direction
+            // as armToHand. Using armToHand as the "upwards" hint below then
+            // asks LookRotation for a rotation whose forward and up are
+            // (nearly) parallel, the degenerate case where Unity's internal
+            // fallback axis is not a stable function of the input: a tiny,
+            // otherwise irrelevant floating-point change in armToHand's exact
+            // direction can flip the fallback's chosen axis frame to frame,
+            // which reads as roll noise on an arm that is not moving. Use the
+            // avatar's own up direction as the hint instead, since it is
+            // already known to be non-degenerate against rotToShoulder's
+            // construction. Only when the forward direction itself points
+            // within ArmForwardVerticalDegrees of vertical does Vector3.up
+            // become the new degenerate case, so fall back to the last
+            // accepted hint there instead of ever computing a fresh one from
+            // a near-parallel pair.
+            Vector3 armForwardHint = localArmToCenter.magnitude > 0.0001f ? localArmToCenter.normalized : armToHand;
+            float   armForwardVerticalAngle = Vector3.Angle(armForwardHint, Vector3.up);
+            Vector3 armForwardUpHint;
+
+            if (armForwardVerticalAngle < ArmForwardVerticalDegrees || armForwardVerticalAngle > 180.0f - ArmForwardVerticalDegrees)
+            {
+                armForwardUpHint = _lastArmForwardUp;
+            }
+            else
+            {
+                armForwardUpHint = Vector3.up;
+            }
+
+            _lastArmForwardUp = armForwardUpHint;
+
+            Quaternion rotArmForward = rotToShoulder * Quaternion.LookRotation(Quaternion.Inverse(rotToShoulder) * localArmToCenter, Quaternion.Inverse(rotToShoulder) * armForwardUpHint);
 
             Vector3 vectorFromCenterSide = Vector3.Cross(_side == UxrHandSide.Left ? rotArmForward * Vector3.up : rotArmForward * -Vector3.up, planeNormal);
 
@@ -548,9 +580,11 @@ namespace UltimateXR.Animation.IK
         private const float ElbowApertureRotationSmoothTime = 0.1f;
         private const float ElbowMinAngleThreshold          = 3.0f;
         private const float ElbowAxisBlendBandDegrees       = 2.0f;
+        private const float ArmForwardVerticalDegrees       = 5.0f;
 
         private UxrArmIKSolver        _otherArm;
         private Vector3                _lastElbowAxis = Vector3.up;
+        private Vector3                _lastArmForwardUp = Vector3.up;
         private UxrUniversalLocalAxes _clavicleUniversalLocalAxes;
         private UxrUniversalLocalAxes _armUniversalLocalAxes;
         private UxrUniversalLocalAxes _forearmUniversalLocalAxes;
