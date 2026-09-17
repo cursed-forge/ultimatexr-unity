@@ -241,23 +241,27 @@ namespace UltimateXR.Animation.IK
             // already known to be non-degenerate against rotToShoulder's
             // construction. Only when the forward direction itself points
             // within ArmForwardVerticalDegrees of vertical does Vector3.up
-            // become the new degenerate case, so fall back to the last
-            // accepted hint there instead of ever computing a fresh one from
-            // a near-parallel pair.
+            // become the new degenerate case. A relaxed arm hanging straight
+            // down sits in exactly that band on every frame, so falling back
+            // to the LAST accepted hint there is a fallback that never
+            // changes: it always resolves to Vector3.up too, so a vertical
+            // arm was never actually fixed. Use the shoulder line instead
+            // (this arm's shoulder to the other arm's shoulder): it stays
+            // close to horizontal for any normal avatar pose, so it is never
+            // parallel to a vertical arm forward and is a stable,
+            // non-degenerate hint in exactly the band Vector3.up fails.
             Vector3 armForwardHint = localArmToCenter.magnitude > 0.0001f ? localArmToCenter.normalized : armToHand;
             float   armForwardVerticalAngle = Vector3.Angle(armForwardHint, Vector3.up);
             Vector3 armForwardUpHint;
 
             if (armForwardVerticalAngle < ArmForwardVerticalDegrees || armForwardVerticalAngle > 180.0f - ArmForwardVerticalDegrees)
             {
-                armForwardUpHint = _lastArmForwardUp;
+                armForwardUpHint = (localArmPos - otherLocalArmPos).normalized;
             }
             else
             {
                 armForwardUpHint = Vector3.up;
             }
-
-            _lastArmForwardUp = armForwardUpHint;
 
             Quaternion rotArmForward = rotToShoulder * Quaternion.LookRotation(Quaternion.Inverse(rotToShoulder) * localArmToCenter, Quaternion.Inverse(rotToShoulder) * armForwardUpHint);
 
@@ -584,7 +588,6 @@ namespace UltimateXR.Animation.IK
 
         private UxrArmIKSolver        _otherArm;
         private Vector3                _lastElbowAxis = Vector3.up;
-        private Vector3                _lastArmForwardUp = Vector3.up;
         private UxrUniversalLocalAxes _clavicleUniversalLocalAxes;
         private UxrUniversalLocalAxes _armUniversalLocalAxes;
         private UxrUniversalLocalAxes _forearmUniversalLocalAxes;
