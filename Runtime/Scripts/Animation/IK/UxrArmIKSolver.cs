@@ -3,6 +3,7 @@
 //   Copyright (c) VRMADA, All rights reserved.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
+using UltimateXR.Avatar;
 using UltimateXR.Avatar.Rig;
 using UltimateXR.Core;
 using UltimateXR.Core.Math;
@@ -71,6 +72,11 @@ namespace UltimateXR.Animation.IK
             get => _side;
             set => _side = value;
         }
+
+        /// <summary>
+        ///     Gets the solver of the opposite arm that this solver uses for the shoulder line, or null. It is set in Start.
+        /// </summary>
+        public UxrArmIKSolver OtherArm => _otherArm;
 
         /// <summary>
         ///     Gets or sets how far [0.0, 1.0] the elbow will from the body when solving the IK. Lower values will bring the elbow
@@ -224,7 +230,11 @@ namespace UltimateXR.Animation.IK
             // Possible range is from bottom to exterior (far left or far right for left arm and right arm respectively).
             Vector3 planeNormal = -new Vector3(a, b, c);
 
-            Vector3    otherLocalArmPos = ToLocalAvatarPos(_otherArm.Arm.position);
+            // CursedForge: a missing or destroyed other arm must not throw on every solve. Without one, use a
+            // point one unit toward this avatar's other side, so the shoulder line keeps the same direction.
+            Vector3    otherLocalArmPos = _otherArm != null && _otherArm.Arm != null
+                                              ? ToLocalAvatarPos(_otherArm.Arm.position)
+                                              : localArmPos + (_side == UxrHandSide.Left ? Vector3.right : Vector3.left);
             Quaternion rotToShoulder    = Quaternion.LookRotation(Vector3.Cross((localArmPos - otherLocalArmPos) * (_side == UxrHandSide.Left ? -1.0f : 1.0f), Vector3.up).normalized, Vector3.up);
             Vector3    armToHand        = (finalLocalHandPosition - localArmPos).normalized;
 
@@ -484,6 +494,33 @@ namespace UltimateXR.Animation.IK
         }
 
         /// <summary>
+        ///     CursedForge: finds the solver of the opposite arm in this solver's own avatar. Inactive solvers count, so an
+        ///     arm whose other arm is inactive at this Start still pairs. A solver of a nested avatar does not count.
+        /// </summary>
+        /// <returns>The opposite arm solver of the same avatar, or null when there is none</returns>
+        private UxrArmIKSolver FindOppositeArmInAvatar()
+        {
+            UxrAvatar avatar = Avatar;
+
+            if (avatar == null)
+            {
+                return null;
+            }
+
+            UxrArmIKSolver[] solvers = avatar.GetComponentsInChildren<UxrArmIKSolver>(true);
+
+            foreach (UxrArmIKSolver solver in solvers)
+            {
+                if (solver != this && solver.Side != _side && solver.Avatar == avatar)
+                {
+                    return solver;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
         ///     Computes the internal parameters for the IK.
         /// </summary>
         private void ComputeParameters()
@@ -496,17 +533,24 @@ namespace UltimateXR.Animation.IK
                 _side = Avatar.transform.InverseTransformPoint(Hand.position).x < 0.0f ? UxrHandSide.Left : UxrHandSide.Right;
             }
 
-            // Try to find opposite arm
-            UxrArmIKSolver[] otherArms = transform.root.GetComponentsInChildren<UxrArmIKSolver>();
+            // Try to find opposite arm.
+            // CursedForge: search this solver's own avatar first and match the opposite side. Upstream took the
+            // first other solver under transform.root, so with many avatars under one root an arm paired with an
+            // arm of a different avatar: a wrong elbow, and a throw on every solve after that avatar was destroyed.
+            // Keep the upstream search only when the avatar has no opposite solver.
+            _otherArm = FindOppositeArmInAvatar();
 
-            _otherArm = null;
-
-            foreach (UxrArmIKSolver solver in otherArms)
+            if (_otherArm == null)
             {
-                if (solver != this)
+                UxrArmIKSolver[] otherArms = transform.root.GetComponentsInChildren<UxrArmIKSolver>();
+
+                foreach (UxrArmIKSolver solver in otherArms)
                 {
-                    _otherArm = solver;
-                    break;
+                    if (solver != this)
+                    {
+                        _otherArm = solver;
+                        break;
+                    }
                 }
             }
 
